@@ -25,6 +25,8 @@
     --accent-deep:#2C6E73;
     --paloalto:  #E0A45C;   /* vendor node: Palo Alto (amber) */
     --fortinet:  #DC6B5A;   /* vendor node: Fortinet (coral)  */
+    --cisco:     #6FA8DC;   /* vendor node: Cisco (blue)      */
+    --infra:     #9C8ADE;   /* track node: infrastructure (violet) */
 
     --display: "Space Grotesk", system-ui, sans-serif;
     --body:    "Inter", system-ui, sans-serif;
@@ -207,6 +209,8 @@
   .track-label .vd{ width:9px; height:9px; border-radius:50%; }
   .track-label .vd.pa{ background:var(--paloalto); box-shadow:0 0 0 4px rgba(224,164,92,0.14); }
   .track-label .vd.ft{ background:var(--fortinet); box-shadow:0 0 0 4px rgba(220,107,90,0.14); }
+  .track-label .vd.cs{ background:var(--cisco); box-shadow:0 0 0 4px rgba(111,168,220,0.14); }
+  .track-label .vd.in{ background:var(--infra); box-shadow:0 0 0 4px rgba(156,138,222,0.14); }
 
   .spine{ position:relative; padding-left:34px; }
   .spine::before{
@@ -229,6 +233,8 @@
   .lab:hover::before{ background:var(--vendor,var(--accent)); box-shadow:0 0 0 5px rgba(84,194,201,0.10); }
   .lab.pa{ --vendor:var(--paloalto); }
   .lab.ft{ --vendor:var(--fortinet); }
+  .lab.cs{ --vendor:var(--cisco); }
+  .lab.in{ --vendor:var(--infra); }
 
   .lab-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; flex-wrap:wrap; }
   .lab h3{ font-family:var(--display); font-weight:600; font-size:19px; margin:0; letter-spacing:-0.01em; }
@@ -328,7 +334,7 @@
       <div class="facts" aria-label="Quick facts">
         <div class="fact"><span class="k">Discipline</span><span class="v">Network Security</span></div>
         <div class="fact"><span class="k">Platforms</span><span class="v">FortiGate · PA&#8209;220</span></div>
-        <div class="fact"><span class="k">Labs logged</span><span class="v">7</span></div>
+        <div class="fact"><span class="k">Labs logged</span><span class="v">9</span></div>
         <div class="fact"><span class="k">Certs</span><span class="v">CCNA · Security+</span></div>
         <div class="fact"><span class="k">Status</span><span class="v"><span class="on">● open to work</span></span></div>
       </div>
@@ -476,6 +482,46 @@
         </div>
         <p>Managed a FortiAP from the FortiGate and broadcast both WPA2-Personal and WPA2-Enterprise SSIDs — the enterprise SSID authenticating against a Linux FreeRADIUS server — with per-radio FortiAP profiles and per-SSID internet policies.</p>
         <div class="tags"><span class="tag">FortiAP</span><span class="tag">RADIUS</span><span class="tag">WPA2-Enterprise</span><span class="tag">SSID profiles</span><span class="tag">FreeRADIUS</span></div>
+      </article>
+    </div>
+
+    <!-- Cisco track -->
+    <div class="track-label"><span class="vd cs"></span>Cisco · IOS XE</div>
+    <div class="spine">
+
+      <article class="lab cs">
+        <div class="lab-top">
+          <div>
+            <h3>Multi-Area OSPF (IPv4 &amp; IPv6)</h3>
+            <div class="meta"><b>7 routers + multilayer switch</b> · OSPFv2 · OSPFv3 · ABRs</div>
+          </div>
+          <a class="dl" href="labs/cisco-01-multi-area-ospf.docx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+            .docx
+          </a>
+        </div>
+        <p>Designed, configured, and verified a dual-stack multi-area OSPF network split into Area 1, the Area 0 backbone, and Area 3, with R3 and R5 as area border routers. Every device was hardened with encrypted passwords and SSH, and I worked through troubleshooting adjacencies and O / O IA routes.</p>
+        <div class="tags"><span class="tag">OSPFv2</span><span class="tag">OSPFv3</span><span class="tag">multi-area</span><span class="tag">ABR</span><span class="tag">IPv6</span><span class="tag">SSH hardening</span></div>
+      </article>
+    </div>
+
+    <!-- Infrastructure track -->
+    <div class="track-label"><span class="vd in"></span>Infrastructure · Self-hosted</div>
+    <div class="spine">
+
+      <article class="lab in">
+        <div class="lab-top">
+          <div>
+            <h3>Self-Hosted AI Platform on NVIDIA GPUs</h3>
+            <div class="meta"><b>3× RTX A4000</b> · Docker · WSL2 · NGINX · Prometheus/Grafana</div>
+          </div>
+          <a class="dl" href="labs/infra-01-local-ai-platform.docx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+            .docx
+          </a>
+        </div>
+        <p>Deployed an eight-container local AI stack (Ollama, Open WebUI, Qdrant, NGINX, Prometheus, Grafana, and exporters) from one docker-compose file. Locked every port to localhost behind an HTTPS reverse proxy with generated secrets, verified models ran fully in VRAM, tested RAG, and benchmarked throughput before scaling to three GPUs.</p>
+        <div class="tags"><span class="tag">Docker Compose</span><span class="tag">NGINX reverse proxy</span><span class="tag">TLS</span><span class="tag">Prometheus</span><span class="tag">Grafana</span><span class="tag">GPU / LLM</span></div>
       </article>
     </div>
   </section>

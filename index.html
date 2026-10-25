@@ -328,7 +328,7 @@
       <div class="facts" aria-label="Quick facts">
         <div class="fact"><span class="k">Discipline</span><span class="v">Network Security</span></div>
         <div class="fact"><span class="k">Platforms</span><span class="v">FortiGate · PA&#8209;220</span></div>
-        <div class="fact"><span class="k">Labs logged</span><span class="v">6</span></div>
+        <div class="fact"><span class="k">Labs logged</span><span class="v">7</span></div>
         <div class="fact"><span class="k">Certs</span><span class="v">CCNA · Security+</span></div>
         <div class="fact"><span class="k">Status</span><span class="v"><span class="on">● open to work</span></span></div>
       </div>
@@ -421,16 +421,31 @@
       <article class="lab ft">
         <div class="lab-top">
           <div>
-            <h3>Initial SOHO Configuration</h3>
-            <div class="meta"><b>FortiGate 61E</b> · FortiOS · LAN/WAN · DHCP</div>
+            <h3>Hardened SOHO Initial Configuration</h3>
+            <div class="meta"><b>FortiGate 40F</b> · FortiOS · admin hardening · security profiles</div>
           </div>
-          <a class="dl" href="labs/fortinet-01-initial-config.docx" download>
+          <a class="dl" href="labs/fortinet-01-initial-config-40f.docx" download>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
             .docx
           </a>
         </div>
-        <p>Factory reset a FortiGate 61E and brought up a SOHO network: an internal LAN with a DHCP scope, a DHCP-addressed WAN uplink, and an internal-to-WAN firewall policy for internet access.</p>
-        <div class="tags"><span class="tag">interfaces</span><span class="tag">DHCP</span><span class="tag">WAN/LAN</span><span class="tag">firewall policy</span></div>
+        <p>Factory reset a FortiGate 40F and turned its convenience-first default config into a hardened SOHO build: moved the management subnet and DHCP pool, removed all administrative access from the WAN interface, replaced the default admin with a dedicated administrator, and applied security profiles on top of the LAN-to-WAN firewall policy.</p>
+        <div class="tags"><span class="tag">factory reset</span><span class="tag">WAN admin lockdown</span><span class="tag">admin accounts</span><span class="tag">firewall policy</span><span class="tag">security profiles</span></div>
+      </article>
+
+      <article class="lab ft">
+        <div class="lab-top">
+          <div>
+            <h3>Web Filtering for an Elementary School</h3>
+            <div class="meta"><b>FortiGate 40F</b> · FortiGuard · Safe Search · overrides</div>
+          </div>
+          <a class="dl" href="labs/fortinet-04-web-filtering.docx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+            .docx
+          </a>
+        </div>
+        <p>Built a FortiGuard category-based web filter for a school network that blocks harmful and off-topic categories, enforces Safe Search and strict YouTube restrictions, and fails closed if FortiGuard is unreachable. Added a 15-minute teacher override to a less restrictive profile and a static URL exemption, then tested every rule from a LAN client.</p>
+        <div class="tags"><span class="tag">web filter</span><span class="tag">FortiGuard categories</span><span class="tag">static URL filter</span><span class="tag">Safe Search</span><span class="tag">override</span><span class="tag">user groups</span></div>
       </article>
 
       <article class="lab ft">

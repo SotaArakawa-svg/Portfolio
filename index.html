@@ -5,285 +5,344 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sota Arakawa — Network &amp; Security Portfolio</title>
 <meta name="description" content="Hands-on firewall configuration labs across Fortinet and Palo Alto platforms. CCNA and CompTIA Security+ certified." />
+<meta name="theme-color" content="#eef0f3" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Stack+Sans+Headline:wght@300&family=Stack+Sans+Text:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
 
 <style>
   :root{
-    --bg:        #0F1620;
-    --bg-soft:   #121C28;
-    --surface:   #161F2B;
-    --surface-2: #1C2735;
-    --line:      #28394B;
-    --line-soft: #1F2C3A;
-    --ink:       #E6ECF2;
-    --ink-dim:   #93A4B6;
-    --ink-faint: #647689;
-    --accent:    #54C2C9;   /* link-active teal — the single UI accent */
-    --accent-deep:#2C6E73;
-    --paloalto:  #E0A45C;   /* vendor node: Palo Alto (amber) */
-    --fortinet:  #DC6B5A;   /* vendor node: Fortinet (coral)  */
-    --cisco:     #6FA8DC;   /* vendor node: Cisco (blue)      */
-    --infra:     #9C8ADE;   /* track node: infrastructure (violet) */
+    color-scheme: light;
 
-    --display: "Space Grotesk", system-ui, sans-serif;
-    --body:    "Inter", system-ui, sans-serif;
-    --mono:    "IBM Plex Mono", ui-monospace, monospace;
+    /* cool grey paper, near-black ink, one cobalt accent */
+    --bg:        #eef0f3;
+    --surface:   #e2e5ea;
+    --surface-2: #d6dae1;
+    --ink:       #0b0c0e;
+    --muted:     #5d6470;
+    --accent:    #1f2de6;
+    --accent-ink:#ffffff;
 
-    --maxw: 980px;
+    /* the cobalt field (certifications) */
+    --field:     #1f2de6;
+    --field-2:   #2f3cf0;
+    --field-ink: #ffffff;
+    --field-soft:#cdd1ff;
+
+    /* the drawn patch panel */
+    --plate:     #16191e;
+    --plate-2:   #23272e;
+    --jack:      #07080a;
+    --pin:       #8b93a1;
+    --led-off:   #343943;
+
+    --display: "Stack Sans Headline", "Stack Sans Text", system-ui, sans-serif;
+    --text:    "Stack Sans Text", system-ui, sans-serif;
+
+    --step-small: clamp(0.875rem, 0.85rem + 0.1vw, 0.9375rem);
+    --step-body:  clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+    --step-lead:  clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+    --step-head:  clamp(2rem, 1.3rem + 3.2vw, 4rem);
+    --step-hero:  clamp(1.75rem, 7.1vw, 5.25rem);
+
+    --margin: clamp(20px, 5vw, 72px);
+    --maxw: 1296px;
+    --gap: clamp(16px, 2vw, 28px);
+    --radius: 6px;
+
+    --ease-out: cubic-bezier(.16,1,.3,1);
   }
 
   *{ box-sizing:border-box; }
-  html{ scroll-behavior:smooth; }
+  html{ scroll-behavior:smooth; -webkit-tap-highlight-color: rgba(31,45,230,.12); }
   body{
     margin:0;
-    background:
-      radial-gradient(900px 540px at 82% -8%, rgba(84,194,201,0.07), transparent 60%),
-      var(--bg);
+    background:var(--bg);
     color:var(--ink);
-    font-family:var(--body);
-    line-height:1.6;
+    font-family:var(--text);
+    font-size:var(--step-body);
+    line-height:1.5;
     -webkit-font-smoothing:antialiased;
     text-rendering:optimizeLegibility;
   }
-  a{ color:inherit; text-decoration:none; }
+  a{ color:inherit; text-decoration:none; touch-action:manipulation; }
+  button{ font:inherit; color:inherit; touch-action:manipulation; }
+  h1,h2,h3{ font-weight:400; margin:0; text-wrap:balance; }
+  p{ text-wrap:pretty; }
+  .nowrap{ white-space:nowrap; }
+  ::selection{ background:var(--accent); color:var(--accent-ink); }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:2px; }
 
-  ::selection{ background:rgba(84,194,201,0.25); color:#fff; }
-
-  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 28px; }
-
-  /* utility eyebrow label */
-  .eyebrow{
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-    color:var(--accent);
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
+  .skip{
+    position:absolute; left:var(--margin); top:-60px; z-index:100;
+    background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:var(--radius);
+    font-size:var(--step-small);
   }
-  .eyebrow::before{
-    content:"";
-    width:22px; height:1px;
-    background:linear-gradient(90deg,var(--accent),transparent);
-  }
+  .skip:focus{ top:12px; }
+
+  .wrap{ max-width:calc(var(--maxw) + 2 * var(--margin)); margin:0 auto; padding:0 var(--margin); }
+  .grid{ display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); column-gap:var(--gap); }
+
+  [id]{ scroll-margin-top:84px; }
 
   /* ───────────────  TOP BAR  ─────────────── */
-  header.bar{
-    position:sticky; top:0; z-index:50;
-    backdrop-filter:blur(10px);
-    background:rgba(15,22,32,0.72);
-    border-bottom:1px solid var(--line-soft);
-  }
+  header.bar{ position:sticky; top:0; z-index:50; background:var(--bg); }
   .bar-inner{
-    max-width:var(--maxw); margin:0 auto; padding:14px 28px;
-    display:flex; align-items:center; justify-content:space-between;
+    display:flex; align-items:center; justify-content:space-between; gap:24px;
+    min-height:64px;
   }
-  .brand{
-    font-family:var(--mono); font-size:13px; letter-spacing:0.04em;
-    color:var(--ink); display:flex; align-items:center; gap:10px;
-  }
-  .brand .dot{
-    width:8px; height:8px; border-radius:50%;
-    background:var(--accent);
-    box-shadow:0 0 0 4px rgba(84,194,201,0.14);
-  }
-  .bar nav{ display:flex; gap:26px; }
+  .brand{ display:flex; align-items:center; gap:12px; font-size:var(--step-small); }
+  .brand .dot{ width:8px; height:8px; border-radius:1px; background:var(--accent); flex:none; }
+  .brand b{ font-weight:500; }
+  .brand .sub{ color:var(--muted); }
+  .bar nav{ display:flex; gap:28px; }
   .bar nav a{
-    font-family:var(--mono); font-size:12.5px; letter-spacing:0.04em;
-    color:var(--ink-dim); transition:color .18s ease;
+    font-size:var(--step-small); color:var(--muted);
+    transition:color .2s ease;
   }
-  .bar nav a:hover{ color:var(--accent); }
-  @media (max-width:640px){ .bar nav{ display:none; } }
+  .bar nav a:hover{ color:var(--ink); }
+  @media (max-width:760px){ .brand .sub{ display:none; } .bar nav{ gap:18px; } }
 
   /* ───────────────  HERO  ─────────────── */
-  .hero{ padding:88px 0 64px; position:relative; }
+  .hero{ padding-block:clamp(56px, 14vh, 160px) clamp(72px, 12vh, 140px); }
   .hero h1{
-    font-family:var(--display);
-    font-weight:600;
-    font-size:clamp(40px, 7vw, 68px);
-    line-height:1.04;
-    letter-spacing:-0.02em;
-    margin:22px 0 0;
+    grid-column:1 / -1;
+    font-family:var(--display); font-weight:300;
+    font-size:var(--step-hero); line-height:1.05; letter-spacing:-0.022em;
   }
-  .hero h1 .accent{ color:var(--accent); }
-  .hero .role{
-    font-family:var(--mono);
-    font-size:clamp(13px,2.2vw,15px);
-    color:var(--ink-dim);
-    margin-top:20px;
-    letter-spacing:0.02em;
-  }
+  .hero h1 .accent{ color:inherit; }
+  .hero-copy{ grid-column:1 / span 6; margin-top:clamp(32px, 5vh, 56px); }
+  .hero .lede{ font-size:var(--step-lead); line-height:1.4; margin:0; max-width:34ch; }
+  .hero .role{ color:var(--muted); font-size:var(--step-small); margin:24px 0 0; max-width:56ch; }
   .hero .role b{ color:var(--ink); font-weight:500; }
-  .hero .lede{
-    max-width:580px; margin-top:22px;
-    color:var(--ink-dim); font-size:16.5px;
-  }
-  .hero .cta-row{ margin-top:34px; display:flex; flex-wrap:wrap; gap:14px; }
+  .cta-row{ margin-top:36px; display:flex; flex-wrap:wrap; align-items:center; gap:12px 28px; }
   .btn{
-    font-family:var(--mono); font-size:13px; letter-spacing:0.03em;
-    padding:11px 18px; border-radius:7px;
-    border:1px solid var(--line);
-    color:var(--ink); background:var(--surface);
-    transition:border-color .18s ease, transform .18s ease, color .18s ease;
-    display:inline-flex; align-items:center; gap:9px;
+    font-size:var(--step-small); font-weight:500;
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    min-height:44px; padding:0 20px; border-radius:var(--radius);
+    color:var(--ink);
+    transition:color .2s ease, background-color .2s ease, transform .3s var(--ease-out);
   }
-  .btn:hover{ border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
-  .btn.solid{ background:var(--accent); color:#06222a; border-color:var(--accent); font-weight:500; }
-  .btn.solid:hover{ color:#06222a; filter:brightness(1.07); }
+  .btn:active{ transform:translateY(1px) scale(.98); }
+  .btn.solid{ background:var(--accent); color:var(--accent-ink); }
+  .btn.solid:hover{ background:#1520c4; }
+  .btn:not(.solid){ padding:0; text-decoration:underline; text-underline-offset:5px; text-decoration-thickness:1px; }
+  .btn:not(.solid):hover{ color:var(--accent); }
 
-  /* link-spine motif drawn beside hero on wide screens */
-  .spine-deco{
-    position:absolute; top:64px; right:8px; width:128px; height:230px;
-    opacity:0.85; pointer-events:none;
+  /* the panel: every lab as a port, grouped by platform */
+  .panel{ grid-column:8 / -1; margin:clamp(32px, 5vh, 56px) 0 0; align-self:start; }
+  [data-ui].panel .plate{
+    background:var(--plate); border-radius:var(--radius);
+    padding:22px 22px 18px;
+    display:flex; gap:18px; justify-content:space-between;
   }
-  @media (max-width:820px){ .spine-deco{ display:none; } }
+  [data-ui] .group{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+  [data-ui] .ports{ display:flex; gap:8px; }
+  [data-ui] .port{
+    position:relative; display:block; width:clamp(26px, 2.6vw, 38px); aspect-ratio:38/40;
+    border-radius:3px; background:var(--plate-2);
+    transition:background-color .2s ease, transform .3s var(--ease-out);
+  }
+  [data-ui] .port svg{ position:absolute; inset:0; width:100%; height:100%; }
+  /* the jack is drawn once in a <symbol>; its lights are set through custom properties */
+  [data-ui] .port{ --link:var(--led-off); --act:var(--led-off); }
+  [data-ui] .port.lit{ --link:var(--accent); }
+  [data-ui] .port:hover, [data-ui] .port:focus-visible{ background:#323843; transform:translateY(-2px); }
+  [data-ui] .port:hover, [data-ui] .port:focus-visible{ --act:#e7ebf2; }
+  [data-ui] .group-name{ color:#c3c9d3; font-size:13px; line-height:1.3; white-space:nowrap; }
+  [data-ui] .group-name span{ color:#8d95a3; display:block; }
+  .panel-key{
+    list-style:none; padding:0; margin:18px 0 0;
+    display:grid; grid-template-columns:1fr 1fr; gap:6px 24px;
+    font-size:var(--step-small);
+  }
+  .panel-key a{
+    display:flex; justify-content:space-between; gap:12px; padding:6px 0;
+    transition:color .2s ease;
+  }
+  .panel-key a:hover{ color:var(--accent); }
+  .panel-key .n{ color:var(--muted); font-variant-numeric:tabular-nums; }
+  .panel figcaption{ color:var(--muted); font-size:var(--step-small); margin-top:14px; }
+
+  @media (max-width:900px){
+    .hero-copy, .panel{ grid-column:1 / -1; }
+    .panel{ margin-top:56px; }
+  }
+  @media (max-width:560px){
+    [data-ui].panel .plate{ padding:16px 14px 14px; gap:10px; overflow-x:auto; }
+    [data-ui] .ports{ gap:5px; }
+    [data-ui] .port{ width:26px; }
+    [data-ui] .group-name{ font-size:12px; }
+    [data-ui] .group-name span{ display:none; }
+    .hero{ padding-block:40px 32px; }
+    .panel-key{ grid-template-columns:1fr; }
+  }
 
   /* ───────────────  SECTION SHELL  ─────────────── */
-  section{ padding:64px 0; border-top:1px solid var(--line-soft); }
-  .sec-head{ margin-bottom:34px; }
-  .sec-head h2{
-    font-family:var(--display); font-weight:600;
-    font-size:clamp(24px,4vw,32px); letter-spacing:-0.01em;
-    margin:14px 0 0;
+  .section{ padding-block:clamp(80px, 11vw, 168px); }
+  .rail{ grid-column:1 / span 3; }
+  .rail .sec-index{ display:block; color:var(--muted); font-size:var(--step-small); font-variant-numeric:tabular-nums; }
+  .body{ grid-column:4 / -1; }
+  .section h2{
+    font-family:var(--display); font-weight:300;
+    font-size:var(--step-head); line-height:1.05; letter-spacing:-0.022em;
+    margin-bottom:clamp(32px, 4vw, 56px);
+  }
+  @media (max-width:900px){
+    .rail, .body{ grid-column:1 / -1; }
+    .rail{ margin-bottom:16px; }
   }
 
   /* ───────────────  ABOUT  ─────────────── */
-  .about-grid{ display:grid; grid-template-columns:1.4fr 1fr; gap:40px; align-items:start; }
-  @media (max-width:760px){ .about-grid{ grid-template-columns:1fr; gap:30px; } }
-  .about p{ color:var(--ink-dim); margin:0 0 16px; }
-  .about p strong{ color:var(--ink); font-weight:600; }
-  .facts{
-    border:1px solid var(--line); border-radius:12px;
-    background:var(--surface); padding:6px 20px;
-  }
-  .fact{
-    display:flex; justify-content:space-between; gap:16px;
-    padding:14px 0; border-bottom:1px solid var(--line-soft);
-    font-size:14px;
-  }
-  .fact:last-child{ border-bottom:none; }
-  .fact .k{ font-family:var(--mono); color:var(--ink-faint); font-size:12px; letter-spacing:0.04em; text-transform:uppercase; }
-  .fact .v{ color:var(--ink); text-align:right; font-family:var(--mono); font-size:13px; }
+  .about-grid{ display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:clamp(32px, 5vw, 80px); align-items:start; }
+  .about p{ margin:0 0 1.1em; max-width:62ch; line-height:1.6; }
+  .about p:first-child{ font-size:var(--step-lead); line-height:1.45; }
+  .about p strong{ font-weight:500; }
+  .facts{ margin:0; background:var(--surface); border-radius:var(--radius); padding:8px 24px; }
+  .fact{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:14px 0; }
+  .fact .k{ color:var(--muted); font-size:var(--step-small); }
+  .fact .v{ text-align:right; font-size:var(--step-small); font-weight:500; font-variant-numeric:tabular-nums; }
   .fact .v .on{ color:var(--accent); }
+  @media (max-width:900px){ .about-grid{ grid-template-columns:1fr; } }
 
-  /* ───────────────  CERTIFICATIONS  ─────────────── */
-  .cert-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-  @media (max-width:640px){ .cert-grid{ grid-template-columns:1fr; } }
-  .cert{
-    border:1px solid var(--line); border-radius:12px;
-    background:linear-gradient(180deg,var(--surface),var(--bg-soft));
-    padding:24px 24px 22px;
-    position:relative; overflow:hidden;
-    transition:border-color .2s ease, transform .2s ease;
-  }
-  .cert:hover{ border-color:var(--accent-deep); transform:translateY(-2px); }
+  /* ───────────────  CERTIFICATIONS: the cobalt field  ─────────────── */
+  .field{ background:var(--field); color:var(--field-ink); }
+  .field .rail .sec-index{ color:var(--field-soft); }
+  .cert-table{ width:100%; border-collapse:collapse; }
+  .cert-table tr:nth-child(odd){ background:var(--field-2); }
+  .cert-table th, .cert-table td{ text-align:left; vertical-align:top; padding:28px 24px; font-weight:400; }
+  .cert-table th{ width:34%; }
+  .cert h3{ font-family:var(--display); font-weight:300; font-size:var(--step-lead); line-height:1.15; letter-spacing:-0.01em; }
+  .cert .issuer{ color:var(--field-soft); font-size:var(--step-small); margin-top:6px; }
+  .cert p{ margin:0; max-width:56ch; }
   .cert .status{
-    font-family:var(--mono); font-size:11px; letter-spacing:0.12em;
-    text-transform:uppercase; color:var(--accent);
-    display:inline-flex; align-items:center; gap:8px;
+    display:inline-flex; align-items:center; gap:10px; white-space:nowrap;
+    font-size:var(--step-small); font-weight:500;
   }
-  .cert .status .pulse{
-    width:8px; height:8px; border-radius:50%; background:var(--accent);
-    box-shadow:0 0 0 0 rgba(84,194,201,0.5);
-    animation:pulse 2.4s ease-out infinite;
+  .cert .status .pulse{ width:8px; height:8px; border-radius:1px; background:var(--field-ink); }
+  .cert-table td.st{ text-align:right; width:1%; }
+  @media (max-width:760px){
+    .cert-table, .cert-table tbody, .cert-table tr, .cert-table th, .cert-table td{ display:block; width:auto; }
+    .cert-table tr{ padding:22px 20px; display:flex; flex-direction:column; gap:12px; }
+    .cert-table th, .cert-table td{ padding:0; }
+    .cert-table td.st{ order:-1; text-align:left; }
   }
-  @keyframes pulse{
-    0%{ box-shadow:0 0 0 0 rgba(84,194,201,0.45); }
-    70%{ box-shadow:0 0 0 9px rgba(84,194,201,0); }
-    100%{ box-shadow:0 0 0 0 rgba(84,194,201,0); }
-  }
-  .cert h3{ font-family:var(--display); font-weight:600; font-size:21px; margin:16px 0 4px; }
-  .cert .issuer{ font-family:var(--mono); font-size:12.5px; color:var(--ink-faint); }
-  .cert p{ color:var(--ink-dim); font-size:14px; margin:14px 0 0; }
 
-  /* ───────────────  LABS / SPINE  ─────────────── */
+  /* ───────────────  LABS  ─────────────── */
+  .labs .rail-inner{ position:sticky; top:96px; }
+  .filters{ display:none; margin-top:28px; flex-direction:column; align-items:flex-start; gap:2px; }
+  .js .filters{ display:flex; }
+  .filters button{
+    background:none; border:0; padding:8px 0; cursor:pointer;
+    display:flex; gap:10px; align-items:baseline;
+    color:var(--muted); font-size:var(--step-small);
+    transition:color .2s ease;
+  }
+  .filters button .n{ font-variant-numeric:tabular-nums; }
+  .filters button:hover{ color:var(--ink); }
+  .filters button[aria-pressed="true"]{ color:var(--ink); font-weight:500; }
+  .filters button[aria-pressed="true"]::before{
+    content:""; width:8px; height:8px; border-radius:1px; background:var(--accent); align-self:center; margin-left:-18px;
+  }
+  .filters button::before{ content:""; width:8px; height:8px; margin-left:-18px; }
+  .filter-status{ color:var(--muted); font-size:var(--step-small); margin:16px 0 0; }
+
+  .track{ margin-top:clamp(56px, 6vw, 96px); }
+  .track:first-of-type{ margin-top:0; }
+  .track[hidden]{ display:none; }
   .track-label{
-    font-family:var(--mono); font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
-    color:var(--ink-faint); margin:40px 0 18px; display:flex; align-items:center; gap:12px;
+    font-family:var(--display); font-weight:300;
+    font-size:var(--step-lead); letter-spacing:-0.01em; line-height:1.2;
+    display:flex; align-items:center; gap:14px;
+    padding-bottom:20px;
   }
-  .track-label:first-of-type{ margin-top:0; }
-  .track-label .vd{ width:9px; height:9px; border-radius:50%; }
-  .track-label .vd.pa{ background:var(--paloalto); box-shadow:0 0 0 4px rgba(224,164,92,0.14); }
-  .track-label .vd.ft{ background:var(--fortinet); box-shadow:0 0 0 4px rgba(220,107,90,0.14); }
-  .track-label .vd.cs{ background:var(--cisco); box-shadow:0 0 0 4px rgba(111,168,220,0.14); }
-  .track-label .vd.in{ background:var(--infra); box-shadow:0 0 0 4px rgba(156,138,222,0.14); }
+  .track-label .vd{ width:10px; height:10px; border-radius:1px; background:var(--ink); }
 
-  .spine{ position:relative; padding-left:34px; }
-  .spine::before{
-    content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px;
-    background:linear-gradient(180deg,transparent,var(--line) 8%,var(--line) 92%,transparent);
-  }
   .lab{
-    position:relative; margin-bottom:16px;
-    border:1px solid var(--line); border-radius:12px;
-    background:var(--surface); padding:22px 24px;
-    transition:border-color .2s ease, background .2s ease, transform .2s ease;
+    display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:12px clamp(24px, 3vw, 48px);
+    padding:28px 28px 30px; margin:0 -28px;
+    border-radius:var(--radius);
+    transition:background-color .25s ease;
   }
-  .lab::before{  /* node dot on the spine */
-    content:""; position:absolute; left:-33px; top:28px;
-    width:11px; height:11px; border-radius:50%;
-    background:var(--bg); border:2px solid var(--vendor,var(--accent));
-    transition:box-shadow .2s ease, background .2s ease;
-  }
-  .lab:hover{ border-color:var(--line); background:var(--surface-2); transform:translateX(2px); }
-  .lab:hover::before{ background:var(--vendor,var(--accent)); box-shadow:0 0 0 5px rgba(84,194,201,0.10); }
-  .lab.pa{ --vendor:var(--paloalto); }
-  .lab.ft{ --vendor:var(--fortinet); }
-  .lab.cs{ --vendor:var(--cisco); }
-  .lab.in{ --vendor:var(--infra); }
-
-  .lab-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; flex-wrap:wrap; }
-  .lab h3{ font-family:var(--display); font-weight:600; font-size:19px; margin:0; letter-spacing:-0.01em; }
-  .lab .meta{ font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); margin-top:7px; letter-spacing:0.02em; }
-  .lab .meta b{ color:var(--ink-dim); font-weight:500; }
-  .lab p{ color:var(--ink-dim); font-size:14.5px; margin:14px 0 0; }
-  .tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+  .lab:nth-of-type(odd){ background:var(--surface); }
+  .lab:target{ background:var(--surface-2); }
+  .lab-top{ grid-column:1; grid-row:1 / span 2; display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
+  .lab h3{ font-size:clamp(1.1875rem, 1.1rem + .4vw, 1.375rem); font-weight:500; line-height:1.25; letter-spacing:-0.005em; }
+  .lab .meta{ color:var(--muted); font-size:var(--step-small); margin-top:6px; }
+  .lab .meta b{ color:var(--ink); font-weight:500; }
+  .lab p{ margin:0; line-height:1.6; max-width:62ch; }
+  .tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; grid-column:2; }
+  .lab > p{ grid-column:2; grid-row:1; }
+  .lab > .tags{ grid-row:2; margin-top:4px; }
   .tag{
-    font-family:var(--mono); font-size:11px; letter-spacing:0.02em;
-    color:var(--ink-dim); padding:4px 10px; border-radius:5px;
-    background:var(--bg-soft); border:1px solid var(--line-soft);
+    font-size:13px; line-height:1; color:var(--ink);
+    padding:7px 10px; border-radius:3px;
+    background:var(--bg);
   }
+  .lab:nth-of-type(odd) .tag{ background:var(--bg); }
+  .lab:nth-of-type(even) .tag{ background:var(--surface); }
   .dl{
-    font-family:var(--mono); font-size:12.5px; color:var(--accent);
-    border:1px solid var(--accent-deep); border-radius:7px;
-    padding:8px 13px; white-space:nowrap;
     display:inline-flex; align-items:center; gap:8px;
-    transition:background .18s ease, transform .18s ease;
+    min-height:36px; padding:0 14px 0 12px; border-radius:var(--radius);
+    background:var(--ink); color:var(--bg);
+    font-size:var(--step-small); font-weight:500; white-space:nowrap;
+    transition:background-color .2s ease, transform .3s var(--ease-out);
   }
-  .dl:hover{ background:rgba(84,194,201,0.10); transform:translateY(-1px); }
-  .dl svg{ width:13px; height:13px; }
+  .dl:hover{ background:var(--accent); }
+  .dl:active{ transform:translateY(1px) scale(.98); }
+  .dl svg{ width:14px; height:14px; transition:transform .3s var(--ease-out); }
+  .dl:hover svg{ transform:translateY(2px); }
+  @media (max-width:760px){
+    .lab{ grid-template-columns:1fr; padding:22px 20px 24px; margin:0 -20px; }
+    .lab > p, .lab > .tags{ grid-column:1; grid-row:auto; }
+    .labs .rail-inner{ position:static; }
+    .filters{ flex-direction:row; flex-wrap:wrap; gap:4px 20px; padding-left:18px; }
+  }
 
   /* ───────────────  FOOTER  ─────────────── */
-  footer{ border-top:1px solid var(--line-soft); padding:40px 0 56px; }
-  .foot-inner{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:18px; }
-  .foot-inner .who{ font-family:var(--display); font-weight:600; font-size:17px; }
-  .foot-links{ display:flex; gap:18px; }
-  .foot-links a{ font-family:var(--mono); font-size:12.5px; color:var(--ink-dim); transition:color .18s ease; }
+  footer{ padding-block:clamp(96px, 18vh, 200px) 32px; }
+  .foot-inner{ display:grid; grid-template-columns:1fr auto 1fr; align-items:baseline; gap:16px 24px; font-size:var(--step-small); }
+  .foot-inner .who{ font-weight:500; }
+  .foot-links{ display:flex; gap:24px; }
+  .foot-links a{ text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:1px; transition:color .2s ease; }
   .foot-links a:hover{ color:var(--accent); }
-  .foot-note{ font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-top:18px; }
+  .foot-note{ color:var(--muted); margin:0; text-align:right; }
+  @media (max-width:760px){
+    .foot-inner{ grid-template-columns:1fr; gap:8px; }
+    .foot-note{ text-align:left; }
+  }
 
-  /* ───────────────  REVEAL  ─────────────── */
-  .reveal{ opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease; }
-  .reveal.in{ opacity:1; transform:none; }
-
-  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+  /* ───────────────  MOTION  ─────────────── */
+  /* parts of each section rise in reading order; content stays visible without script */
+  .js [data-rise]{ opacity:0; transform:translateY(24px); }
+  .js .in [data-rise], .js [data-rise].in{
+    opacity:1; transform:none;
+    transition:opacity .8s var(--ease-out), transform .9s var(--ease-out);
+    transition-delay:calc(var(--i, 0) * 80ms);
+  }
+  /* the signature: the panel's link lights come up one by one on load */
+  @property --link{ syntax:'<color>'; inherits:true; initial-value:#343943; }
+  .js [data-ui] .port.lit{ --link:var(--led-off); }
+  .js [data-ui].booted .port.lit{
+    --link:var(--accent);
+    transition:--link .2s ease calc(var(--p, 0) * 90ms + 400ms), background-color .2s ease, transform .3s var(--ease-out);
+  }
 
   @media (prefers-reduced-motion:reduce){
-    *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
-    .reveal{ opacity:1; transform:none; }
+    html{ scroll-behavior:auto; }
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
+    .js [data-rise]{ opacity:1; transform:none; }
   }
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <header class="bar">
-  <div class="bar-inner">
-    <a class="brand" href="#top"><span class="dot"></span>sota-arakawa</a>
-    <nav>
+  <div class="wrap bar-inner">
+    <a class="brand" href="#top"><span class="dot"></span><b>sota-arakawa</b><span class="sub">Network &amp; Security Portfolio</span></a>
+    <nav aria-label="Sections">
       <a href="#about">about</a>
       <a href="#certs">certifications</a>
       <a href="#labs">labs</a>
@@ -292,240 +351,328 @@
 </header>
 
 <a id="top"></a>
-<div class="wrap">
+<main id="main">
 
   <!-- ───────────── HERO ───────────── -->
-  <section class="hero" style="border-top:none;">
-    <svg class="spine-deco" viewBox="0 0 128 230" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <line x1="14" y1="20" x2="14" y2="210" stroke="#28394B" stroke-width="1"/>
-      <line x1="14" y1="40"  x2="110" y2="40"  stroke="#28394B" stroke-width="1"/>
-      <line x1="14" y1="115" x2="92"  y2="115" stroke="#28394B" stroke-width="1"/>
-      <line x1="14" y1="190" x2="110" y2="190" stroke="#28394B" stroke-width="1"/>
-      <circle cx="14" cy="40"  r="4" fill="#0F1620" stroke="#54C2C9" stroke-width="2"/>
-      <circle cx="14" cy="115" r="4" fill="#0F1620" stroke="#E0A45C" stroke-width="2"/>
-      <circle cx="14" cy="190" r="4" fill="#0F1620" stroke="#DC6B5A" stroke-width="2"/>
-      <circle cx="110" cy="40"  r="3" fill="#54C2C9"/>
-      <circle cx="92"  cy="115" r="3" fill="#E0A45C"/>
-      <circle cx="110" cy="190" r="3" fill="#DC6B5A"/>
-    </svg>
+  <section class="hero wrap">
+    <div class="grid">
+      <h1 data-rise style="--i:0">Sota Arakawa<br><span class="accent">firewall</span> &amp; network labs</h1>
 
-    <span class="eyebrow">Network &amp; Security Portfolio</span>
-    <h1>Sota Arakawa<br><span class="accent">firewall</span> &amp; network labs</h1>
-    <p class="role"><b>Focus:</b> firewall configuration · routing &amp; switching · VPN · wireless security &nbsp;//&nbsp; <b>Platforms:</b> Fortinet · Palo Alto</p>
-    <p class="lede">A working log of hands-on labs I&#39;ve built and documented — from factory reset to remote-access VPN and RADIUS-backed Wi-Fi — on real FortiGate and Palo Alto hardware.</p>
-    <div class="cta-row">
-      <a class="btn solid" href="#labs">View the labs</a>
-      <a class="btn" href="#certs">Certifications</a>
+      <div class="hero-copy">
+        <p class="lede" data-rise style="--i:1">A working log of hands-on labs I&#39;ve built and documented — from factory reset to remote-access VPN and RADIUS-backed <span class="nowrap">Wi-Fi</span> — on real FortiGate and Palo Alto hardware.</p>
+        <p class="role" data-rise style="--i:2"><b>Focus:</b> firewall configuration · routing &amp; switching · VPN · wireless security &nbsp;//&nbsp; <b>Platforms:</b> Fortinet · Palo Alto</p>
+        <div class="cta-row" data-rise style="--i:3">
+          <a class="btn solid" href="#labs">View the labs</a>
+          <a class="btn" href="#certs">Certifications</a>
+        </div>
+      </div>
+
+      <!-- every lab is one port; each port links to its write-up -->
+      <figure class="panel" data-ui data-rise style="--i:2" aria-label="Labs by platform">
+        <div class="plate">
+          <div class="group">
+            <div class="ports">
+              <a class="port lit" href="#lab-pa-01" style="--p:0" title="Web GUI Access &amp; Recovery" aria-label="Palo Alto: Web GUI Access &amp; Recovery"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+              <a class="port lit" href="#lab-pa-02" style="--p:1" title="SOHO Network Build" aria-label="Palo Alto: SOHO Network Build"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+              <a class="port lit" href="#lab-pa-03" style="--p:2" title="GlobalProtect Remote-Access VPN" aria-label="Palo Alto: GlobalProtect Remote-Access VPN"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+            </div>
+            <span class="group-name" aria-hidden="true">Palo Alto<span>PA&#8209;220</span></span>
+          </div>
+          <div class="group">
+            <div class="ports">
+              <a class="port lit" href="#lab-ft-01" style="--p:3" title="Hardened SOHO Initial Configuration" aria-label="Fortinet: Hardened SOHO Initial Configuration"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+              <a class="port lit" href="#lab-ft-04" style="--p:4" title="Web Filtering for an Elementary School" aria-label="Fortinet: Web Filtering for an Elementary School"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+              <a class="port lit" href="#lab-ft-02" style="--p:5" title="SSL VPN with FortiClient" aria-label="Fortinet: SSL VPN with FortiClient"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+              <a class="port lit" href="#lab-ft-03" style="--p:6" title="Wireless AP with RADIUS" aria-label="Fortinet: Wireless AP with RADIUS"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+            </div>
+            <span class="group-name" aria-hidden="true">Fortinet<span>FortiGate</span></span>
+          </div>
+          <div class="group">
+            <div class="ports">
+              <a class="port lit" href="#lab-cs-01" style="--p:7" title="Multi-Area OSPF (IPv4 &amp; IPv6)" aria-label="Cisco: Multi-Area OSPF (IPv4 &amp; IPv6)"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+            </div>
+            <span class="group-name" aria-hidden="true">Cisco<span>IOS XE</span></span>
+          </div>
+          <div class="group">
+            <div class="ports">
+              <a class="port lit" href="#lab-in-01" style="--p:8" title="Self-Hosted AI Platform on NVIDIA GPUs" aria-label="Infrastructure: Self-Hosted AI Platform on NVIDIA GPUs"><svg aria-hidden="true"><use href="#jack"/></svg></a>
+            </div>
+            <span class="group-name" aria-hidden="true">Infra<span>Self-hosted</span></span>
+          </div>
+        </div>
+        <ul class="panel-key">
+          <li><a href="#labs" data-show="pa">Palo Alto <span class="n">3 labs</span></a></li>
+          <li><a href="#labs" data-show="ft">Fortinet <span class="n">4 labs</span></a></li>
+          <li><a href="#labs" data-show="cs">Cisco <span class="n">1 lab</span></a></li>
+          <li><a href="#labs" data-show="in">Infrastructure <span class="n">1 lab</span></a></li>
+        </ul>
+      </figure>
     </div>
+
+    <!-- one drawn RJ45 jack, reused by every port -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="jack" viewBox="0 0 38 40">
+        <rect class="led led-link" style="fill:var(--link, #343943)" x="5" y="4" width="7" height="3" rx="0.5"/>
+        <rect class="led led-act" style="fill:var(--act, #343943)" x="26" y="4" width="7" height="3" rx="0.5"/>
+        <path fill="#07080a" d="M5 11h28v19h-7v4h-4v3h-6v-3h-4v-4H5z"/>
+        <g fill="#8b93a1">
+          <rect x="8"    y="11" width="1.4" height="6"/>
+          <rect x="10.9" y="11" width="1.4" height="6"/>
+          <rect x="13.8" y="11" width="1.4" height="6"/>
+          <rect x="16.7" y="11" width="1.4" height="6"/>
+          <rect x="19.6" y="11" width="1.4" height="6"/>
+          <rect x="22.5" y="11" width="1.4" height="6"/>
+          <rect x="25.4" y="11" width="1.4" height="6"/>
+          <rect x="28.3" y="11" width="1.4" height="6"/>
+        </g>
+        <rect fill="#1d2127" x="7" y="27" width="24" height="1.5"/>
+      </symbol>
+    </svg>
   </section>
 
   <!-- ───────────── ABOUT ───────────── -->
-  <section id="about" class="reveal">
-    <div class="sec-head">
-      <span class="eyebrow">01 / About</span>
-      <h2>About me</h2>
-    </div>
-    <div class="about-grid">
-      <div class="about">
-        <p>I&#39;m an aspiring <strong>network and security engineer</strong> who learns by building. Rather than stopping at theory, I rack real firewalls, break things on purpose, and write up exactly what I did and <em>why</em> each step matters — the documents linked below are those write-ups.</p>
-        <p>My hands-on work spans two enterprise platforms. On <strong>Fortinet</strong> I&#39;ve done initial SOHO bring-up, SSL VPN with FortiClient, and a managed wireless deployment with WPA2-Enterprise backed by a FreeRADIUS server. On <strong>Palo Alto</strong> I&#39;ve recovered devices through maintenance mode, built zone-based SOHO networks with VLANs and DHCP, and stood up a GlobalProtect remote-access VPN with certificates.</p>
-        <p>Along the way I work comfortably with interfaces and DHCP, security zones and firewall policy, NAT, IPsec/SSL VPN, RADIUS authentication, and the CLI debugging that goes with all of it. I&#39;m <strong>CCNA</strong> and <strong>CompTIA Security+</strong> certified, and I&#39;m looking for a role where I can keep going deeper.</p>
+  <section id="about" class="section wrap reveal">
+    <div class="grid">
+      <div class="rail sec-head">
+        <span class="sec-index" data-rise>01 / About</span>
       </div>
-      <div class="facts" aria-label="Quick facts">
-        <div class="fact"><span class="k">Discipline</span><span class="v">Network Security</span></div>
-        <div class="fact"><span class="k">Platforms</span><span class="v">FortiGate · PA&#8209;220</span></div>
-        <div class="fact"><span class="k">Labs logged</span><span class="v">9</span></div>
-        <div class="fact"><span class="k">Certs</span><span class="v">CCNA · Security+</span></div>
-        <div class="fact"><span class="k">Status</span><span class="v"><span class="on">● open to work</span></span></div>
+      <div class="body">
+        <h2 data-rise style="--i:1">About me</h2>
+        <div class="about-grid">
+          <div class="about">
+            <p data-rise style="--i:2">I&#39;m an aspiring <strong>network and security engineer</strong> who learns by building. Rather than stopping at theory, I rack real firewalls, break things on purpose, and write up exactly what I did and <em>why</em> each step matters — the documents linked below are those write-ups.</p>
+            <p data-rise style="--i:3">My hands-on work spans two enterprise platforms. On <strong>Fortinet</strong> I&#39;ve done initial SOHO bring-up, SSL VPN with FortiClient, and a managed wireless deployment with WPA2-Enterprise backed by a FreeRADIUS server. On <strong>Palo Alto</strong> I&#39;ve recovered devices through maintenance mode, built zone-based SOHO networks with VLANs and DHCP, and stood up a GlobalProtect remote-access VPN with certificates.</p>
+            <p data-rise style="--i:4">Along the way I work comfortably with interfaces and DHCP, security zones and firewall policy, NAT, IPsec/SSL VPN, RADIUS authentication, and the CLI debugging that goes with all of it. I&#39;m <strong>CCNA</strong> and <strong>CompTIA Security+</strong> certified, and I&#39;m looking for a role where I can keep going deeper.</p>
+          </div>
+          <div class="facts" aria-label="Quick facts" data-rise style="--i:3">
+            <div class="fact"><span class="k">Discipline</span><span class="v">Network Security</span></div>
+            <div class="fact"><span class="k">Platforms</span><span class="v">FortiGate · PA&#8209;220</span></div>
+            <div class="fact"><span class="k">Labs logged</span><span class="v">9</span></div>
+            <div class="fact"><span class="k">Certs</span><span class="v">CCNA · Security+</span></div>
+            <div class="fact"><span class="k">Status</span><span class="v"><span class="on">● open to work</span></span></div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ───────────── CERTIFICATIONS ───────────── -->
-  <section id="certs" class="reveal">
-    <div class="sec-head">
-      <span class="eyebrow">02 / Credentials</span>
-      <h2>Certifications</h2>
-    </div>
-    <div class="cert-grid">
-      <div class="cert">
-        <span class="status"><span class="pulse"></span>Certified</span>
-        <h3>CCNA</h3>
-        <div class="issuer">Cisco Certified Network Associate</div>
-        <p>Foundational routing and switching, IP addressing and subnetting, network access, IP connectivity and services, and the security fundamentals that underpin every lab here.</p>
+  <section id="certs" class="section field reveal">
+    <div class="wrap grid">
+      <div class="rail sec-head">
+        <span class="sec-index" data-rise>02 / Credentials</span>
       </div>
-      <div class="cert">
-        <span class="status"><span class="pulse"></span>Certified</span>
-        <h3>CompTIA Security+</h3>
-        <div class="issuer">CompTIA · SY0&#8209;701</div>
-        <p>Core security concepts across threats and attacks, architecture, secure access, cryptography, and operations — the framework behind the firewall, VPN, and authentication work below.</p>
+      <div class="body">
+        <h2 data-rise style="--i:1">Certifications</h2>
+        <table class="cert-table" data-rise style="--i:2">
+          <tbody>
+            <tr class="cert">
+              <th scope="row">
+                <h3>CCNA</h3>
+                <div class="issuer">Cisco Certified Network Associate</div>
+              </th>
+              <td><p>Foundational routing and switching, IP addressing and subnetting, network access, IP connectivity and services, and the security fundamentals that underpin every lab here.</p></td>
+              <td class="st"><span class="status"><span class="pulse"></span>Certified</span></td>
+            </tr>
+            <tr class="cert">
+              <th scope="row">
+                <h3>CompTIA Security+</h3>
+                <div class="issuer">CompTIA · SY0&#8209;701</div>
+              </th>
+              <td><p>Core security concepts across threats and attacks, architecture, secure access, cryptography, and operations — the framework behind the firewall, VPN, and authentication work below.</p></td>
+              <td class="st"><span class="status"><span class="pulse"></span>Certified</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
 
   <!-- ───────────── LABS ───────────── -->
-  <section id="labs" class="reveal">
-    <div class="sec-head">
-      <span class="eyebrow">03 / Lab Reports</span>
-      <h2>Configuration labs</h2>
-    </div>
-
-    <!-- Palo Alto track -->
-    <div class="track-label"><span class="vd pa"></span>Palo Alto · PA&#8209;220</div>
-    <div class="spine">
-
-      <article class="lab pa">
-        <div class="lab-top">
-          <div>
-            <h3>Web GUI Access &amp; Recovery</h3>
-            <div class="meta"><b>PA-220</b> · console / PuTTY · maintenance mode</div>
+  <section id="labs" class="section labs wrap reveal">
+    <div class="grid">
+      <div class="rail sec-head">
+        <div class="rail-inner">
+          <span class="sec-index" data-rise>03 / Lab Reports</span>
+          <div class="filters" role="group" aria-label="Show labs by platform" data-rise style="--i:1">
+            <button type="button" data-filter="all" aria-pressed="true">All platforms <span class="n">9</span></button>
+            <button type="button" data-filter="pa" aria-pressed="false">Palo Alto <span class="n">3</span></button>
+            <button type="button" data-filter="ft" aria-pressed="false">Fortinet <span class="n">4</span></button>
+            <button type="button" data-filter="cs" aria-pressed="false">Cisco <span class="n">1</span></button>
+            <button type="button" data-filter="in" aria-pressed="false">Infrastructure <span class="n">1</span></button>
           </div>
-          <a class="dl" href="labs/palo-alto-01-web-gui-access.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
+          <p class="filter-status" aria-live="polite" hidden></p>
         </div>
-        <p>Returned a PA-220 to factory defaults over a serial console, entered the PAN-OS maintenance recovery tool, and restored management access through the web GUI at 192.168.1.1.</p>
-        <div class="tags"><span class="tag">factory reset</span><span class="tag">console access</span><span class="tag">maintenance mode</span><span class="tag">web GUI</span></div>
-      </article>
+      </div>
+      <div class="body">
+        <h2 data-rise style="--i:1">Configuration labs</h2>
 
-      <article class="lab pa">
-        <div class="lab-top">
-          <div>
-            <h3>SOHO Network Build</h3>
-            <div class="meta"><b>PA-220</b> · zones · VLANs · DHCP · NAT</div>
+        <!-- Palo Alto track -->
+        <div class="track" data-track="pa">
+          <div class="track-label" data-rise><span class="vd pa"></span>Palo Alto · PA&#8209;220</div>
+          <div class="spine">
+
+            <article class="lab pa" id="lab-pa-01" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>Web GUI Access &amp; Recovery</h3>
+                  <div class="meta"><b>PA-220</b> · console / PuTTY · maintenance mode</div>
+                </div>
+                <a class="dl" href="labs/palo-alto-01-web-gui-access.docx" download aria-label="Download Web GUI Access &amp; Recovery write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Returned a PA-220 to factory defaults over a serial console, entered the PAN-OS maintenance recovery tool, and restored management access through the web GUI at 192.168.1.1.</p>
+              <div class="tags"><span class="tag">factory reset</span><span class="tag">console access</span><span class="tag">maintenance mode</span><span class="tag">web GUI</span></div>
+            </article>
+
+            <article class="lab pa" id="lab-pa-02" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>SOHO Network Build</h3>
+                  <div class="meta"><b>PA-220</b> · zones · VLANs · DHCP · NAT</div>
+                </div>
+                <a class="dl" href="labs/palo-alto-02-soho-network.docx" download aria-label="Download SOHO Network Build write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Built a small-office network with Trust/Untrust security zones, an L2 VLAN and L3 VLAN-interface gateway, DHCP for clients, and an ISP-facing L3 interface — delivering internet access through NAT.</p>
+              <div class="tags"><span class="tag">security zones</span><span class="tag">VLANs</span><span class="tag">L2/L3 interfaces</span><span class="tag">DHCP</span><span class="tag">NAT</span></div>
+            </article>
+
+            <article class="lab pa" id="lab-pa-03" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>GlobalProtect Remote-Access VPN</h3>
+                  <div class="meta"><b>PA-220</b> · GlobalProtect · certificates · RDP</div>
+                </div>
+                <a class="dl" href="labs/palo-alto-03-globalprotect-vpn.docx" download aria-label="Download GlobalProtect Remote-Access VPN write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Generated a root certificate, configured user authentication, and stood up a GlobalProtect remote-access VPN so an outside client could tunnel in and reach an internal host over Remote Desktop.</p>
+              <div class="tags"><span class="tag">GlobalProtect</span><span class="tag">certificates</span><span class="tag">remote access</span><span class="tag">user auth</span></div>
+            </article>
           </div>
-          <a class="dl" href="labs/palo-alto-02-soho-network.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
         </div>
-        <p>Built a small-office network with Trust/Untrust security zones, an L2 VLAN and L3 VLAN-interface gateway, DHCP for clients, and an ISP-facing L3 interface — delivering internet access through NAT.</p>
-        <div class="tags"><span class="tag">security zones</span><span class="tag">VLANs</span><span class="tag">L2/L3 interfaces</span><span class="tag">DHCP</span><span class="tag">NAT</span></div>
-      </article>
 
-      <article class="lab pa">
-        <div class="lab-top">
-          <div>
-            <h3>GlobalProtect Remote-Access VPN</h3>
-            <div class="meta"><b>PA-220</b> · GlobalProtect · certificates · RDP</div>
+        <!-- Fortinet track -->
+        <div class="track" data-track="ft">
+          <div class="track-label" data-rise><span class="vd ft"></span>Fortinet · FortiGate</div>
+          <div class="spine">
+
+            <article class="lab ft" id="lab-ft-01" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>Hardened SOHO Initial Configuration</h3>
+                  <div class="meta"><b>FortiGate 40F</b> · FortiOS · admin hardening · security profiles</div>
+                </div>
+                <a class="dl" href="labs/fortinet-01-initial-config-40f.docx" download aria-label="Download Hardened SOHO Initial Configuration write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Factory reset a FortiGate 40F and turned its convenience-first default config into a hardened SOHO build: moved the management subnet and DHCP pool, removed all administrative access from the WAN interface, replaced the default admin with a dedicated administrator, and applied security profiles on top of the LAN-to-WAN firewall policy.</p>
+              <div class="tags"><span class="tag">factory reset</span><span class="tag">WAN admin lockdown</span><span class="tag">admin accounts</span><span class="tag">firewall policy</span><span class="tag">security profiles</span></div>
+            </article>
+
+            <article class="lab ft" id="lab-ft-04" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>Web Filtering for an Elementary School</h3>
+                  <div class="meta"><b>FortiGate 40F</b> · FortiGuard · Safe Search · overrides</div>
+                </div>
+                <a class="dl" href="labs/fortinet-04-web-filtering.docx" download aria-label="Download Web Filtering for an Elementary School write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Built a FortiGuard category-based web filter for a school network that blocks harmful and off-topic categories, enforces Safe Search and strict YouTube restrictions, and fails closed if FortiGuard is unreachable. Added a 15-minute teacher override to a less restrictive profile and a static URL exemption, then tested every rule from a LAN client.</p>
+              <div class="tags"><span class="tag">web filter</span><span class="tag">FortiGuard categories</span><span class="tag">static URL filter</span><span class="tag">Safe Search</span><span class="tag">override</span><span class="tag">user groups</span></div>
+            </article>
+
+            <article class="lab ft" id="lab-ft-02" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>SSL VPN with FortiClient</h3>
+                  <div class="meta"><b>FortiGate 40F</b> · SSL-VPN · FortiClient · RDP</div>
+                </div>
+                <a class="dl" href="labs/fortinet-02-ssl-vpn.docx" download aria-label="Download SSL VPN with FortiClient write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Configured a remote-access SSL VPN on a FortiGate 40F — VPN user and group, a client IP pool, the SSL-VPN portal on the WAN interface, and a tunnel-to-LAN policy — then connected and tested through FortiClient.</p>
+              <div class="tags"><span class="tag">SSL VPN</span><span class="tag">users &amp; groups</span><span class="tag">FortiClient</span><span class="tag">tunnel policy</span></div>
+            </article>
+
+            <article class="lab ft" id="lab-ft-03" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>Wireless AP with RADIUS</h3>
+                  <div class="meta"><b>FortiGate 61E + FortiAP</b> · WPA2 · FreeRADIUS</div>
+                </div>
+                <a class="dl" href="labs/fortinet-03-wireless-radius.docx" download aria-label="Download Wireless AP with RADIUS write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Managed a FortiAP from the FortiGate and broadcast both WPA2-Personal and WPA2-Enterprise SSIDs — the enterprise SSID authenticating against a Linux FreeRADIUS server — with per-radio FortiAP profiles and per-SSID internet policies.</p>
+              <div class="tags"><span class="tag">FortiAP</span><span class="tag">RADIUS</span><span class="tag">WPA2-Enterprise</span><span class="tag">SSID profiles</span><span class="tag">FreeRADIUS</span></div>
+            </article>
           </div>
-          <a class="dl" href="labs/palo-alto-03-globalprotect-vpn.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
         </div>
-        <p>Generated a root certificate, configured user authentication, and stood up a GlobalProtect remote-access VPN so an outside client could tunnel in and reach an internal host over Remote Desktop.</p>
-        <div class="tags"><span class="tag">GlobalProtect</span><span class="tag">certificates</span><span class="tag">remote access</span><span class="tag">user auth</span></div>
-      </article>
-    </div>
 
-    <!-- Fortinet track -->
-    <div class="track-label"><span class="vd ft"></span>Fortinet · FortiGate</div>
-    <div class="spine">
+        <!-- Cisco track -->
+        <div class="track" data-track="cs">
+          <div class="track-label" data-rise><span class="vd cs"></span>Cisco · IOS XE</div>
+          <div class="spine">
 
-      <article class="lab ft">
-        <div class="lab-top">
-          <div>
-            <h3>Hardened SOHO Initial Configuration</h3>
-            <div class="meta"><b>FortiGate 40F</b> · FortiOS · admin hardening · security profiles</div>
+            <article class="lab cs" id="lab-cs-01" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>Multi-Area OSPF (IPv4 &amp; IPv6)</h3>
+                  <div class="meta"><b>7 routers + multilayer switch</b> · OSPFv2 · OSPFv3 · ABRs</div>
+                </div>
+                <a class="dl" href="labs/cisco-01-multi-area-ospf.docx" download aria-label="Download Multi-Area OSPF (IPv4 &amp; IPv6) write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Designed, configured, and verified a dual-stack multi-area OSPF network split into Area 1, the Area 0 backbone, and Area 3, with R3 and R5 as area border routers. Every device was hardened with encrypted passwords and SSH, and I worked through troubleshooting adjacencies and O / O IA routes.</p>
+              <div class="tags"><span class="tag">OSPFv2</span><span class="tag">OSPFv3</span><span class="tag">multi-area</span><span class="tag">ABR</span><span class="tag">IPv6</span><span class="tag">SSH hardening</span></div>
+            </article>
           </div>
-          <a class="dl" href="labs/fortinet-01-initial-config-40f.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
         </div>
-        <p>Factory reset a FortiGate 40F and turned its convenience-first default config into a hardened SOHO build: moved the management subnet and DHCP pool, removed all administrative access from the WAN interface, replaced the default admin with a dedicated administrator, and applied security profiles on top of the LAN-to-WAN firewall policy.</p>
-        <div class="tags"><span class="tag">factory reset</span><span class="tag">WAN admin lockdown</span><span class="tag">admin accounts</span><span class="tag">firewall policy</span><span class="tag">security profiles</span></div>
-      </article>
 
-      <article class="lab ft">
-        <div class="lab-top">
-          <div>
-            <h3>Web Filtering for an Elementary School</h3>
-            <div class="meta"><b>FortiGate 40F</b> · FortiGuard · Safe Search · overrides</div>
+        <!-- Infrastructure track -->
+        <div class="track" data-track="in">
+          <div class="track-label" data-rise><span class="vd in"></span>Infrastructure · Self-hosted</div>
+          <div class="spine">
+
+            <article class="lab in" id="lab-in-01" data-rise>
+              <div class="lab-top">
+                <div>
+                  <h3>Self-Hosted AI Platform on NVIDIA GPUs</h3>
+                  <div class="meta"><b>3× RTX A4000</b> · Docker · WSL2 · NGINX · Prometheus/Grafana</div>
+                </div>
+                <a class="dl" href="labs/infra-01-local-ai-platform.docx" download aria-label="Download Self-Hosted AI Platform on NVIDIA GPUs write-up (.docx)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                  .docx
+                </a>
+              </div>
+              <p>Deployed an eight-container local AI stack (Ollama, Open WebUI, Qdrant, NGINX, Prometheus, Grafana, and exporters) from one docker-compose file. Locked every port to localhost behind an HTTPS reverse proxy with generated secrets, verified models ran fully in VRAM, tested RAG, and benchmarked throughput before scaling to three GPUs.</p>
+              <div class="tags"><span class="tag">Docker Compose</span><span class="tag">NGINX reverse proxy</span><span class="tag">TLS</span><span class="tag">Prometheus</span><span class="tag">Grafana</span><span class="tag">GPU / LLM</span></div>
+            </article>
           </div>
-          <a class="dl" href="labs/fortinet-04-web-filtering.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
         </div>
-        <p>Built a FortiGuard category-based web filter for a school network that blocks harmful and off-topic categories, enforces Safe Search and strict YouTube restrictions, and fails closed if FortiGuard is unreachable. Added a 15-minute teacher override to a less restrictive profile and a static URL exemption, then tested every rule from a LAN client.</p>
-        <div class="tags"><span class="tag">web filter</span><span class="tag">FortiGuard categories</span><span class="tag">static URL filter</span><span class="tag">Safe Search</span><span class="tag">override</span><span class="tag">user groups</span></div>
-      </article>
-
-      <article class="lab ft">
-        <div class="lab-top">
-          <div>
-            <h3>SSL VPN with FortiClient</h3>
-            <div class="meta"><b>FortiGate 40F</b> · SSL-VPN · FortiClient · RDP</div>
-          </div>
-          <a class="dl" href="labs/fortinet-02-ssl-vpn.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
-        </div>
-        <p>Configured a remote-access SSL VPN on a FortiGate 40F — VPN user and group, a client IP pool, the SSL-VPN portal on the WAN interface, and a tunnel-to-LAN policy — then connected and tested through FortiClient.</p>
-        <div class="tags"><span class="tag">SSL VPN</span><span class="tag">users &amp; groups</span><span class="tag">FortiClient</span><span class="tag">tunnel policy</span></div>
-      </article>
-
-      <article class="lab ft">
-        <div class="lab-top">
-          <div>
-            <h3>Wireless AP with RADIUS</h3>
-            <div class="meta"><b>FortiGate 61E + FortiAP</b> · WPA2 · FreeRADIUS</div>
-          </div>
-          <a class="dl" href="labs/fortinet-03-wireless-radius.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
-        </div>
-        <p>Managed a FortiAP from the FortiGate and broadcast both WPA2-Personal and WPA2-Enterprise SSIDs — the enterprise SSID authenticating against a Linux FreeRADIUS server — with per-radio FortiAP profiles and per-SSID internet policies.</p>
-        <div class="tags"><span class="tag">FortiAP</span><span class="tag">RADIUS</span><span class="tag">WPA2-Enterprise</span><span class="tag">SSID profiles</span><span class="tag">FreeRADIUS</span></div>
-      </article>
-    </div>
-
-    <!-- Cisco track -->
-    <div class="track-label"><span class="vd cs"></span>Cisco · IOS XE</div>
-    <div class="spine">
-
-      <article class="lab cs">
-        <div class="lab-top">
-          <div>
-            <h3>Multi-Area OSPF (IPv4 &amp; IPv6)</h3>
-            <div class="meta"><b>7 routers + multilayer switch</b> · OSPFv2 · OSPFv3 · ABRs</div>
-          </div>
-          <a class="dl" href="labs/cisco-01-multi-area-ospf.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
-        </div>
-        <p>Designed, configured, and verified a dual-stack multi-area OSPF network split into Area 1, the Area 0 backbone, and Area 3, with R3 and R5 as area border routers. Every device was hardened with encrypted passwords and SSH, and I worked through troubleshooting adjacencies and O / O IA routes.</p>
-        <div class="tags"><span class="tag">OSPFv2</span><span class="tag">OSPFv3</span><span class="tag">multi-area</span><span class="tag">ABR</span><span class="tag">IPv6</span><span class="tag">SSH hardening</span></div>
-      </article>
-    </div>
-
-    <!-- Infrastructure track -->
-    <div class="track-label"><span class="vd in"></span>Infrastructure · Self-hosted</div>
-    <div class="spine">
-
-      <article class="lab in">
-        <div class="lab-top">
-          <div>
-            <h3>Self-Hosted AI Platform on NVIDIA GPUs</h3>
-            <div class="meta"><b>3× RTX A4000</b> · Docker · WSL2 · NGINX · Prometheus/Grafana</div>
-          </div>
-          <a class="dl" href="labs/infra-01-local-ai-platform.docx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-            .docx
-          </a>
-        </div>
-        <p>Deployed an eight-container local AI stack (Ollama, Open WebUI, Qdrant, NGINX, Prometheus, Grafana, and exporters) from one docker-compose file. Locked every port to localhost behind an HTTPS reverse proxy with generated secrets, verified models ran fully in VRAM, tested RAG, and benchmarked throughput before scaling to three GPUs.</p>
-        <div class="tags"><span class="tag">Docker Compose</span><span class="tag">NGINX reverse proxy</span><span class="tag">TLS</span><span class="tag">Prometheus</span><span class="tag">Grafana</span><span class="tag">GPU / LLM</span></div>
-      </article>
+      </div>
     </div>
   </section>
-</div>
+</main>
 
 <!-- ───────────── FOOTER ───────────── -->
 <footer>
@@ -538,17 +685,69 @@
         <a href="#" rel="me">LinkedIn</a>
         <a href="#">Email</a>
       </div>
+      <p class="foot-note">Network &amp; security lab portfolio · built with hands-on firewall configuration · last updated 2026</p>
     </div>
-    <p class="foot-note">Network &amp; security lab portfolio · built with hands-on firewall configuration · last updated 2026</p>
   </div>
 </footer>
 
 <script>
-  // gentle scroll reveal
-  const io = new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  },{ threshold:0.12 });
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  document.documentElement.classList.add('js');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // the panel's link lights come up once the page has loaded
+  const panel = document.querySelector('.panel');
+  requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('booted')));
+
+  // the parts of each section rise in reading order as it arrives
+  const parts = document.querySelectorAll('[data-rise]');
+  if (reduce || !('IntersectionObserver' in window)) {
+    parts.forEach(el => el.classList.add('in'));
+  } else {
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    parts.forEach(el => io.observe(el));
+  }
+
+  // show labs by platform; the choice is kept in the address (?platform=pa)
+  const buttons = [...document.querySelectorAll('[data-filter]')];
+  const tracks = [...document.querySelectorAll('[data-track]')];
+  const status = document.querySelector('.filter-status');
+  const names = { all: 'all platforms', pa: 'Palo Alto', ft: 'Fortinet', cs: 'Cisco', in: 'Infrastructure' };
+
+  function show(key, announce) {
+    if (!names[key]) key = 'all';
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === key)));
+    let count = 0;
+    tracks.forEach(t => {
+      const on = key === 'all' || t.dataset.track === key;
+      t.hidden = !on;
+      if (on) {
+        count += t.querySelectorAll('.lab').length;
+        t.querySelectorAll('[data-rise]').forEach(el => el.classList.add('in'));
+      }
+    });
+    if (announce) {
+      status.hidden = false;
+      status.textContent = `Showing ${count} ${count === 1 ? 'lab' : 'labs'} from ${names[key]}.`;
+    }
+    const url = new URL(location.href);
+    if (key === 'all') url.searchParams.delete('platform'); else url.searchParams.set('platform', key);
+    history.replaceState(null, '', url);
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => show(b.dataset.filter, true)));
+  document.querySelectorAll('[data-show]').forEach(a => a.addEventListener('click', () => show(a.dataset.show, true)));
+
+  // a port always opens its lab, whatever is filtered
+  document.querySelectorAll('.port').forEach(p => p.addEventListener('click', () => {
+    const lab = document.querySelector(p.getAttribute('href'));
+    const track = lab && lab.closest('[data-track]');
+    if (track && track.hidden) show('all', false);
+  }));
+
+  const initial = new URL(location.href).searchParams.get('platform');
+  if (initial) show(initial, false);
 </script>
 </body>
 </html>
